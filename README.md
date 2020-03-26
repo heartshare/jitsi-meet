@@ -56,5 +56,6 @@ ansible-playbook site-jitsi.yml
 
 * Finally, point your favorite web browser to https://yourdomainname to access your Jitsi Meet Video conferencing service.
 * Clicking the GO button will immediately create a Video conferencing channel for you.
+* Invite your friends.
 * Have fun!
 
