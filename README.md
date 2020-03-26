@@ -59,3 +59,6 @@ ansible-playbook site-jitsi.yml
 * Invite your friends.
 * Have fun!
 
+## Any hints or feedback?
+
+Olaf Sarnow <olaf.sarnow@uib.no>
