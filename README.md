@@ -13,6 +13,7 @@
 * A domain`name  being pointed to your server 
    For DNS Services I recommend https://www.cloudflare.com/
 * git and ansible installed on your workstation
+
    https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
 
    https://www.linode.com/docs/development/version-control/how-to-install-git-on-linux-mac-and-windows/
