@@ -1,4 +1,4 @@
 ---
-ansible_setfqdn: mimi.sarnow.no
-ansible_sethostname: mimi
+ansible_setfqdn: meet.sarnow.no
+ansible_sethostname: meet
 ansible_email: olaf@sarnow.no

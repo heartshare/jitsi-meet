@@ -4,7 +4,9 @@
 * A fresh Ubuntu 18.04 LTS x64 server instance with an IPv4 address
    You can use a cloud provider, e.g.
    https://www.digitalocean.com/
+
    https://www.kamatera.com/
+
    https://www.linode.com/
 
 * root access with ssh key to your server
@@ -12,6 +14,7 @@
    For DNS Services I recommend https://www.cloudflare.com/
 * git and ansible installed on your workstation
    https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
+
    https://www.linode.com/docs/development/version-control/how-to-install-git-on-linux-mac-and-windows/
 
 ## get the ansible playbooks
