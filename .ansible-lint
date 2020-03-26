@@ -1,0 +1,11 @@
+verbosity: 1
+parseable: true
+skip_list:
+  - ignore_lint
+  - skip_ansible_lint
+  - '203'
+  - '301'
+  - '303'
+  - '502'
+  - '401'
+  - '204'
