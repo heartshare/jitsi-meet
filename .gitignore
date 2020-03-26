@@ -1,0 +1,5 @@
+.github
+.ansible-lint
+.travis.yml
+CODE_OF_CONDUCT.md
+LICENSE
