@@ -26,11 +26,10 @@
 - name: Upgrade all packages to the latest version
   apt:
     name: "*"
-    state: latest
   tags: install
 
 - name: Install packages
-  apt: name={{ item }} state=latest
+  apt: name={{ item }}
   with_items:
     - openjdk-8-jre-headless
     - nginx
@@ -127,5 +126,3 @@
     - jicofo
     - prosody
   tags: jitsi
-
-
