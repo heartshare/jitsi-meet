@@ -119,7 +119,7 @@
     state: restarted
   tags: nginx
 
-- name: start jitsi 
+- name: start jitsi
   service: name={{ item }} state=started
   with_items:
     - jitsi-videobridge
