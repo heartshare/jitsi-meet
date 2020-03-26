@@ -1,0 +1,8 @@
+---
+- hosts:
+    - jitsi
+  vars_files:
+    - group_vars/jitsi
+  become: true
+  roles:
+    - jitsi

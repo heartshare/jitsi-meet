@@ -1,0 +1,4 @@
+---
+ansible_setfqdn: mimi.sarnow.no
+ansible_sethostname: mimi
+ansible_email: olaf@sarnow.no

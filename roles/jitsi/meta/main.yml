@@ -1,0 +1,12 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: Olaf Sarnow
+  description: Install jitsi on ubuntu 18.04
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.4
+  platforms:
+    - name: Ubuntu
+      versions:
+        - 18.04
