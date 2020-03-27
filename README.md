@@ -16,7 +16,7 @@
    https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html  
    https://www.linode.com/docs/development/version-control/how-to-install-git-on-linux-mac-and-windows/  
 
-## get the ansible playbooks
+## get the ansible playbook folder
 * create a temporary directory on your workstation and fetch the installation playbook
 
 ```commandline
