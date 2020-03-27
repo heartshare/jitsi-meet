@@ -1,7 +1,6 @@
 #Install Jitsi Meet on Ubuntu 18.04 LTS
 
-![screenshot jitsi desktop]
-(https://desktop.jitsi.org/wiki/pub/sip-communicator/screenshots/videobridge-big.png)
+![screenshot jitsi desktop](https://desktop.jitsi.org/wiki/pub/sip-communicator/screenshots/videobridge-big.png)
 
 ## Prerequisites
 * A fresh Ubuntu 18.04 LTS x64 server instance with an IPv4 address    
