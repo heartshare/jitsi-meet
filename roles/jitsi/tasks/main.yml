@@ -65,13 +65,25 @@
   tags: jitsi
 
 - name: copy acme file
+  when: ansible_distribution_version == "18.04"
   template:
-    src: install-letsencrypt-cert.sh.j2
+    src: install-letsencrypt-cert-1804.sh.j2
     dest: /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
     owner: root
     group: root
     mode: 0755
   tags: cert
+
+- name: copy acme file
+  when: ansible_distribution_version == "19.10"
+  template:
+    src: install-letsencrypt-cert-1910.sh.j2
+    dest: /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
+    owner: root
+    group: root
+    mode: 0755
+  tags: cert
+
 
 - name: stop nginx
   service:
@@ -91,11 +103,22 @@
 
 - name: stop jitsi for configuring nginx
   service: name={{ item }} state=stopped
+  when: ansible_distribution_version == "18.04"
   with_items:
-    - jitsi-videobridge
-    - jicofo
-    - prosody
+    -  jitsi-videobridge
+    -  jicofo
+    -  prosody
   tags: nginx
+
+- name: stop jitsi for configuring nginx
+  service: name={{ item }} state=stopped
+  when: ansible_distribution_version == "19.10"
+  with_items:
+    -  jitsi-videobridge2
+    -  jicofo
+    -  prosody
+  tags: nginx
+
 
 - name: configure cert
   shell: /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
@@ -113,6 +136,13 @@
   ignore_errors: yes
   tags: kill
 
+- name: delete link nginx
+  when: ansible_distribution_version == "19.10"
+  file:
+    dest: /etc/nginx/modules-enabled/60-jitsi-meet.conf
+    state: absent
+  tags: nginx
+
 - name: start nginx
   service:
     name: nginx
@@ -121,8 +151,18 @@
 
 - name: start jitsi
   service: name={{ item }} state=started
+  when: ansible_distribution_version == "18.04"
   with_items:
-    - jitsi-videobridge
-    - jicofo
-    - prosody
+    -  jitsi-videobridge
+    -  jicofo
+    -  prosody
+  tags: jitsi
+
+- name: start jisti
+  service: name={{ item }} state=started
+  when: ansible_distribution_version == "19.10"
+  with_items:
+    -  jitsi-videobridge2
+    -  jicofo
+    -  prosody
   tags: jitsi
