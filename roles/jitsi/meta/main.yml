@@ -10,3 +10,4 @@ galaxy_info:
     - name: Ubuntu
       versions:
         - 18.04
+        - 19.10
