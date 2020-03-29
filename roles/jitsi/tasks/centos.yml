@@ -92,9 +92,14 @@
     mv  /var/tmp/{{ vb_pkg }} /usr/local/videobridge
   tags: vbridge
 
+- name: create config dir
+  file:
+    dest: /root/.sip-communicator
+    state: directory
+  tags: vbridge
+
 - name: configure videobridge
   shell: |
-    mkdir -p /root/.sip-communicator
     cat > /root/.sip-communicator/sip-communicator.properties << EOF
     org.jitsi.impl.neomedia.transform.srtp.SRTPCryptoContext.checkReplay=false
     org.jitsi.videobridge.TCP_HARVESTER_PORT=4443
