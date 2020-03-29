@@ -24,6 +24,10 @@
   with_items:
     - git
     - epel-release
+    - ca-certificates
+    - nginx
+    - unzip
+    - java-latest-openjdk
   tags: install
 
 - name: delete example.conf prodosy
@@ -41,3 +45,63 @@
 - name: generate certs prosody
   shell: |
     prosodyctl cert generate {{ ansible_setfqdn }}
+    update-ca-trust force-enable
+  tags: prosody
+
+- name: link cert
+  file:
+    src: /var/lib/prosody/{{ ansible_setfqdn }}.crt
+    dest: /etc/pki/ca-trust/source/anchors/{{ ansible_setfqdn }}.crt
+    state: link
+  tags: prosody
+
+- name: update ca
+  shell: |
+    update-ca-trust extract
+  tags: prosody
+
+- name: start prosody
+  shell: |
+    prosodyctl restart
+  tags: prosody
+
+- name: copy nginx conf
+  template:
+    src: DEFAULT.conf.j2
+    dest: /etc/nginx/conf.d/{{ ansible_setfqdn }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags: nginx
+
+- name: get videobridge
+  get_url:
+    url: https://download.jitsi.org/jitsi-videobridge/linux/{{ vb_pkg }}.zip
+    dest: /var/tmp
+  tags: vbridge
+
+- name: unzip videobridge
+  unarchive:
+    src: /var/tmp/{{ vb_pkg }}.zip
+    dest: /var/tmp
+    remote_src: yes
+  tags: vbridge
+
+- name: copy folder videobridge
+  shell: |
+    mv  /var/tmp/{{ vb_pkg }} /usr/local/videobridge
+  tags: vbridge
+
+- name: configure videobridge
+  shell: |
+    mkdir -p /root/.sip-communicator
+    cat > /root/.sip-communicator/sip-communicator.properties << EOF
+    org.jitsi.impl.neomedia.transform.srtp.SRTPCryptoContext.checkReplay=false
+    org.jitsi.videobridge.TCP_HARVESTER_PORT=4443
+    EOF
+  tags: vbridge
+
+- name: start videobridge
+  shell:
+    cd /usr/local/videobridge ; ./jvb.sh --host=localhost --domain={{ ansible_setfqdn }} --port=5347 --secret=YOURSECRET1 &
+  tags: vbridge
