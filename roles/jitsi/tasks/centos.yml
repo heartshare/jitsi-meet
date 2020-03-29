@@ -28,6 +28,7 @@
     - nginx
     - unzip
     - java-latest-openjdk
+    - maven
   tags: install
 
 - name: delete example.conf prodosy
@@ -110,3 +111,16 @@
   shell:
     cd /usr/local/videobridge ; ./jvb.sh --host=localhost --domain={{ ansible_setfqdn }} --port=5347 --secret=YOURSECRET1 &
   tags: vbridge
+
+- name: Install Jitsi Conference Focus (jicofo)
+  git:
+    repo: 'https://github.com/jitsi/jicofo.git'
+    dest: /usr/local/jicofo
+  tags: jicofo
+
+- name: build jicofo
+  shell: |
+    cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false
+    cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip
+    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT-archive ; ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=YOURSECRET2
+  tags: jicofo
