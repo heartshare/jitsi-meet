@@ -4,9 +4,11 @@
 
 ## Prerequisites
 * A fresh Ubuntu server instance with an IPv4 address  
+
 * supported and tested versions  
    Ubuntu 18.04 (LTS) x64  
    Ubutun 19.10   
+
   You can use a cloud provider, e.g.   
    https://www.digitalocean.com/  
    https://www.kamatera.com/  
