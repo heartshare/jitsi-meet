@@ -1,0 +1,43 @@
+---
+# tasks file for jitsi
+# centos version
+
+- name: copy hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  tags: hostname
+
+- hostname:
+    name: "{{ ansible_sethostname }}"
+  tags: hostname
+
+- name: install pkgs
+  yum: name=prosody state=present update_cache=yes
+  tags: install
+
+- name: install pkgs
+  yum: name={{ item }} state=present update_cache=yes
+  with_items:
+    - git
+    - epel-release
+  tags: install
+
+- name: delete example.conf prodosy
+  file:
+    path: /etc/prosody/conf.d/example.com.cfg.lua
+    state: absent
+  tags: prosody
+ 
+- name: copy prodosy conf
+  template:
+    src: prosody.conf.j2
+    dest: /etc/prosody/conf.d/{{ ansible_setfqdn }}.cfg.lua
+  tags: prosody
+
+- name: generate certs prosody
+  shell: |
+    prosodyctl cert generate {{ ansible_setfqdn }}

@@ -1,0 +1,17 @@
+VirtualHost "{{ ansible_setfqdn }}"
+    authentication = "anonymous"
+    ssl = {
+        key = "/var/lib/prosody/{{ ansible_setfqdn }}.key";
+        certificate = "/var/lib/prosody/{{ ansible_setfqdn }}.crt";
+    }
+    modules_enabled = {
+        "bosh";
+        "pubsub";
+    }
+    c2s_require_encryption = false
+
+Component "conference.{{ ansible_setfqdn }}" "muc"
+Component "jitsi-videobridge.{{ ansible_setfqdn }}"
+    component_secret = "YOURSECRET1"
+Component "focus.{{ ansible_setfqdn }}"
+    component_secret = "YOURSECRET2"
