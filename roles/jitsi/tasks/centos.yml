@@ -31,7 +31,7 @@
     path: /etc/prosody/conf.d/example.com.cfg.lua
     state: absent
   tags: prosody
- 
+
 - name: copy prodosy conf
   template:
     src: prosody.conf.j2
