@@ -35,7 +35,7 @@
 
 - name: generate npm
   shell: |
-    curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash - 
+    curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash -
   tags: install
 
 - name: install nodejs
