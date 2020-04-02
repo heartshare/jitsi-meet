@@ -1,4 +1,4 @@
 ---
-ansible_setfqdn: pups.sarnow.no
-ansible_sethostname: pups
+ansible_setfqdn: meeti.sarnow.no
+ansible_sethostname: meeti
 ansible_email: olaf@sarnow.no

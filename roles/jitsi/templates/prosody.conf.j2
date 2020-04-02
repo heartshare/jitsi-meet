@@ -9,6 +9,13 @@ VirtualHost "{{ ansible_setfqdn }}"
         "pubsub";
     }
     c2s_require_encryption = false
+VirtualHost "auth.{{ ansible_setfqdn }}"
+    ssl = {
+        key = "/var/lib/prosody/auth.jitsi.example.com.key";
+        certificate = "/var/lib/prosody/auth.jitsi.example.com.crt";
+    }
+    authentication = "internal_plain"
+admins = { "focus@auth.{{ ansible_setfqdn }}" }
 
 Component "conference.{{ ansible_setfqdn }}" "muc"
 Component "jitsi-videobridge.{{ ansible_setfqdn }}"

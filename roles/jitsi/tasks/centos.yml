@@ -16,19 +16,32 @@
   tags: hostname
 
 - name: install pkgs
-  yum: name=prosody state=present update_cache=yes
+  yum: name=epel-release state=present update_cache=yes
   tags: install
 
 - name: install pkgs
   yum: name={{ item }} state=present update_cache=yes
   with_items:
     - git
-    - epel-release
     - ca-certificates
     - nginx
     - unzip
     - java-latest-openjdk
     - maven
+    - prosody
+    - gcc-c++
+    - make
+  tags: install
+
+- name: generate npm
+  shell: |
+    curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash - 
+  tags: install
+
+- name: install nodejs
+  yum:
+    name: nodejs
+    state: present
   tags: install
 
 - name: delete example.conf prodosy
@@ -120,7 +133,41 @@
 
 - name: build jicofo
   shell: |
-    cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false
-    cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip
-    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT-archive ; ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=YOURSECRET2
+    cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false &&
+    cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip &&
+    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=YOURSECRET2 --user_domain={{ ansible_setfqdn }} &
   tags: jicofo
+
+- name: Create srv directory
+  file:
+    path: /srv
+    state: directory
+    mode: '0755'
+  tags: meet
+
+- name: checkout jitsi-meet
+  git:
+    repo: 'https://github.com/jitsi/jitsi-meet.git'
+    dest: /srv/jitsi-meet
+  tags: meet
+
+- name: build jitsi-meet
+  shell: |
+    cd /srv/jitsi-meet ; npm install && make
+  tags: meet
+
+
+- name: copy jitsi-meet  conf
+  template:
+    src: jitsi-meet.config.js.j2
+    dest: /srv/jitsi-meet/config.js
+    owner: root
+    group: root
+    mode: 0644
+  tags: meet
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+
