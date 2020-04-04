@@ -20,7 +20,7 @@ CERT_KEY="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
 CERT_CRT="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
 
    ./certbot-auto certonly --noninteractive \
-    --webroot --webroot-path /srv/jitsi-meet \
+    --webroot --webroot-path /usr/share/nginx/html \
     -d $DOMAIN \
     --agree-tos --email $EMAIL
 

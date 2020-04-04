@@ -33,6 +33,13 @@
     - make
   tags: install
 
+- name: start nginx
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  tags: nginx
+
 - name: generate npm
   shell: |
     curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash -
@@ -79,15 +86,6 @@
     prosodyctl restart
   tags: prosody
 
-- name: copy nginx conf
-  template:
-    src: DEFAULT.conf.j2
-    dest: /etc/nginx/conf.d/{{ ansible_setfqdn }}.conf
-    owner: root
-    group: root
-    mode: 0644
-  tags: nginx
-
 - name: get videobridge
   get_url:
     url: https://download.jitsi.org/jitsi-videobridge/linux/{{ vb_pkg }}.zip
@@ -122,7 +120,7 @@
 
 - name: start videobridge
   shell:
-    cd /usr/local/videobridge ; ./jvb.sh --host=localhost --domain={{ ansible_setfqdn }} --port=5347 --secret=YOURSECRET1 &
+    cd /usr/local/videobridge ; ./jvb.sh --host=localhost --domain={{ ansible_setfqdn }} --port=5347 --secret=xxx &
   tags: vbridge
 
 - name: Install Jitsi Conference Focus (jicofo)
@@ -135,7 +133,7 @@
   shell: |
     cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false &&
     cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip &&
-    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=YOURSECRET2 --user_domain={{ ansible_setfqdn }} &
+    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=xxx --user_domain={{ ansible_setfqdn }} &
   tags: jicofo
 
 - name: Create srv directory
@@ -166,7 +164,41 @@
     mode: 0644
   tags: meet
 
+- name: copy cert script
+  template:
+    src: install-letsencrypt-cert-centos.sh.j2
+    dest: /root/install-letsencrypt-cert-centos.sh
+    mode: 0755
+  tags: cert
+
+- name: create nginx dir
+  file:
+    path: /etc/nginx/conf.d
+    state: directory
+    mode: '0755'
+  tags: nginx
+
+
+- name: copy nginx conf
+  template:
+    src: DEFAULT.conf.j2
+    dest: /etc/nginx/conf.d/{{ ansible_setfqdn }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags: nginx
+
+- name: create cert
+  shell: |
+    /root/install-letsencrypt-cert-centos.sh
+  tags: nginx
+
 - name: restart nginx
   service:
     name: nginx
     state: restarted
+
+- name: enable http access
+  shell: |
+    setsebool -P httpd_can_network_connect on
+    chcon -Rt httpd_sys_content_t /srv
