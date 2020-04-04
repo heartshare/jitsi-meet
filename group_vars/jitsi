@@ -1,4 +1,4 @@
 ---
-ansible_setfqdn: meeti.sarnow.no
-ansible_sethostname: meeti
+ansible_setfqdn: meetic.sarnow.no
+ansible_sethostname: meetic
 ansible_email: olaf@sarnow.no
