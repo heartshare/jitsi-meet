@@ -3,7 +3,7 @@ dependencies: []
 
 galaxy_info:
   author: Olaf Sarnow
-  description: Install a jitsi meet server on Linux
+  description: Install jitsi meet server on Linux
   license: "license (BSD, MIT)"
   min_ansible_version: 2.4
   platforms:
