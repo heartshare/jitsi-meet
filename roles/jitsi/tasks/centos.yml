@@ -43,19 +43,19 @@
 
 - name: create jitsi dir
   file:
-    dest: {{ item }}
+    dest: "{{ item }}"
     state: directory
-    with_items:
-     - /etc/jitsi
-     - /etc/jitsi/jicofo
-     - /etc/jitsi/meet
-     - /etc/jitsi/videobridge
+  with_items:
+    - /etc/jitsi
+    - /etc/jitsi/jicofo
+    - /etc/jitsi/meet
+    - /etc/jitsi/videobridge
   tags: jitsi-dir
 
 - name: copy jitsi-meet  conf
   template:
     src: jitsi-meet.config.js.j2
-    dest: /etc/jitsi/meet/{{ ansible_setfqdn}}.js
+    dest: /etc/jitsi/meet/{{ ansible_setfqdn}}-config.js
     owner: root
     group: root
     mode: 0644
@@ -157,8 +157,12 @@
 - name: build jicofo
   shell: |
     cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false &&
-    cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip &&
-    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; JAVA_SYS_PROPS=\"-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=jicofo\" exec ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=vwe3i28Y --port=5347 --user_name=focus --user_password=pzF@Djg --user_domain=auth.{{ ansible_setfqdn }} &
+    cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip
+  tags: jicofo
+
+- name: start jicofo
+  shell: |
+    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; JAVA_SYS_PROPS="-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=jicofo" exec ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=vwe3i28Y --port=5347 --user_name=focus --user_domain=auth.{{ ansible_setfqdn }} &
   tags: jicofo
 
 - name: checkout jitsi-meet
@@ -209,8 +213,8 @@
     state: restarted
 
 - name: start videobridge
-  shell:
-    cd /usr/local/videobridge ; JAVA_SYS_PROPS=\"-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=videobridge\" exec ./jvb.sh --domain={{ ansible_setfqdn }} --port=5347 --secret=1Y3GsLJn &
+  shell: |
+    cd /usr/local/videobridge ; JAVA_SYS_PROPS="-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=videobridge" exec ./jvb.sh --domain={{ ansible_setfqdn }} --port=5347 --secret=1Y3GsLJn &
   tags: vbridge
 
 
