@@ -41,6 +41,33 @@
     enabled: yes
   tags: nginx
 
+- name: create jitsi dir
+  file:
+    dest: {{ item }}
+    state: directory
+    with_items:
+     - /etc/jitsi
+     - /etc/jitsi/jicofo
+     - /etc/jitsi/meet
+     - /etc/jitsi/videobridge
+  tags: jitsi-dir
+
+- name: copy jitsi-meet  conf
+  template:
+    src: jitsi-meet.config.js.j2
+    dest: /etc/jitsi/meet/{{ ansible_setfqdn}}.js
+    owner: root
+    group: root
+    mode: 0644
+  tags: meet
+
+- name: jicofo sip conf
+  lineinfile:
+    path: /etc/jicofo/sip-communicator.properties
+    line: org.jitsi.jicofo.BRIDGE_MUC=JvbBrewery@internal.{{ ansible_setfqdn }}
+    create: yes
+  tags: jicofo
+
 - name: generate npm
   shell: |
     curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash -
@@ -105,15 +132,9 @@
     mv  /var/tmp/{{ vb_pkg }} /usr/local/videobridge
   tags: vbridge
 
-- name: create config dir
-  file:
-    dest: /root/.sip-communicator
-    state: directory
-  tags: vbridge
-
 - name: configure videobridge
   shell: |
-    cat > /root/.sip-communicator/sip-communicator.properties << EOF
+    cat > /etc/jitsi/videobridge/sip-communicator.properties << EOF
     org.ice4j.ice.harvest.DISABLE_AWS_HARVESTER=true
     org.ice4j.ice.harvest.STUN_MAPPING_HARVESTER_ADDRESSES=meet-jit-si-turnrelay.jitsi.net:443
     org.jitsi.videobridge.ENABLE_STATISTICS=true
@@ -137,7 +158,7 @@
   shell: |
     cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false &&
     cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip &&
-    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=vwe3i28Y --port=5347 --user_name=focus --user_password=pzF@Djg --user_domain=auth.{{ ansible_setfqdn }} &
+    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; JAVA_SYS_PROPS=\"-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=jicofo\" exec ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=vwe3i28Y --port=5347 --user_name=focus --user_password=pzF@Djg --user_domain=auth.{{ ansible_setfqdn }} &
   tags: jicofo
 
 - name: checkout jitsi-meet
@@ -152,14 +173,6 @@
   tags: meet
 
 
-- name: copy jitsi-meet  conf
-  template:
-    src: jitsi-meet.config.js.j2
-    dest: /usr/share/jitsi-meet/config.js
-    owner: root
-    group: root
-    mode: 0644
-  tags: meet
 
 - name: copy cert script
   template:
@@ -197,7 +210,7 @@
 
 - name: start videobridge
   shell:
-    cd /usr/local/videobridge ; ./jvb.sh --domain={{ ansible_setfqdn }} --port=5347 --secret=1Y3GsLJn &
+    cd /usr/local/videobridge ; JAVA_SYS_PROPS=\"-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=videobridge\" exec ./jvb.sh --domain={{ ansible_setfqdn }} --port=5347 --secret=1Y3GsLJn &
   tags: vbridge
 
 
