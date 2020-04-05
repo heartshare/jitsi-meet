@@ -55,7 +55,7 @@
 - name: copy jitsi-meet  conf
   template:
     src: jitsi-meet.config.js.j2
-    dest: /etc/jitsi/meet/{{ ansible_setfqdn}}-config.js
+    dest: /etc/jitsi/meet/{{ ansible_setfqdn }}-config.js
     owner: root
     group: root
     mode: 0644
