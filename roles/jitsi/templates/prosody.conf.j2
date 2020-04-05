@@ -1,0 +1,77 @@
+plugin_paths = { "/usr/share/jitsi-meet/resources/prosody-plugins/" }
+
+-- domain mapper options, must at least have domain base set to use the mapper
+muc_mapper_domain_base = "{{ ansible_setfqdn }}";
+
+turncredentials_secret = "MP1gwyCc";
+
+turncredentials = {
+  { type = "stun", host = "{{ ansible_setfqdn }}", port = "443" },
+  { type = "turn", host = "{{ ansible_setfqdn }}", port = "443", transport = "udp" },
+  { type = "turns", host = "{{ ansible_setfqdn }}", port = "443", transport = "tcp" }
+};
+
+cross_domain_bosh = false;
+consider_bosh_secure = true;
+
+VirtualHost "{{ ansible_setfqdn }}"
+        -- enabled = false -- Remove this line to enable this host
+        authentication = "anonymous"
+        -- Properties below are modified by jitsi-meet-tokens package config
+        -- and authentication above is switched to "token"
+        --app_id="example_app_id"
+        --app_secret="example_app_secret"
+        -- Assign this host a certificate for TLS, otherwise it would use the one
+        -- set in the global section (if any).
+        -- Note that old-style SSL on port 5223 only supports one certificate, and will always
+        -- use the global one.
+        ssl = {
+        key = "/var/lib/prosody/{{ ansible_setfqdn }}.key";
+        certificate = "/var/lib/prosody/{{ ansible_setfqdn }}.crt";
+        }
+        speakerstats_component = "speakerstats.{{ ansible_setfqdn }}"
+        conference_duration_component = "conferenceduration.{{ ansible_setfqdn }}"
+        -- we need bosh
+        modules_enabled = {
+            "bosh";
+            "pubsub";
+            "ping"; -- Enable mod_ping
+            "speakerstats";
+            "conference_duration";
+        }
+        c2s_require_encryption = false
+
+Component "conference.{{ ansible_setfqdn }}" "muc"
+    storage = "none"
+    modules_enabled = {
+        "muc_meeting_id";
+        "muc_domain_mapper";
+        -- "token_verification";
+    }
+    admins = { "focus@auth.{{ ansible_setfqdn }}" }
+    muc_room_locking = false
+    muc_room_default_public_jids = true
+
+-- internal muc component
+Component "internal.auth.{{ ansible_setfqdn }}" "muc"
+    storage = "none"
+    modules_enabled = {
+      "ping";
+    }
+    admins = { "focus@auth.{{ ansible_setfqdn }}", "jvb@auth.{{ ansible_setfqdn }}" }
+
+VirtualHost "auth.{{ ansible_setfqdn }}"
+    ssl = {
+        key = "/var/lib/prosody/{{ ansible_setfqdn }}.key";
+        certificate = "/var/lib/prosody/{{ ansible_setfqdn }}.crt";
+    }
+    authentication = "internal_plain"
+
+Component "focus.{{ ansible_setfqdn }}"
+    component_secret = "vwe3i28Y"
+
+Component "speakerstats.{{ ansible_setfqdn }}" "speakerstats_component"
+    muc_component = "conference.{{ ansible_setfqdn }}"
+
+Component "conferenceduration.{{ ansible_setfqdn }}" "conference_duration_component"
+    muc_component = "conference.{{ ansible_setfqdn }}"

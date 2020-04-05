@@ -1,13 +1,14 @@
-#Install Jitsi Meet on Ubuntu 
+#Install Jitsi Meet Server on Linux
 
 ![screenshot jitsi desktop](https://desktop.jitsi.org/wiki/pub/sip-communicator/screenshots/videobridge-big.png)
 
 ## Prerequisites
-* A fresh Ubuntu server instance with an IPv4 address  
+* A fresh Linux based server instance with an IPv4 address  
 
 * supported and tested versions  
    Ubuntu 18.04 (LTS) x64  
-   Ubuntu 19.10   
+   Ubuntu 19.10  
+   CentOS 7.6
 
   You can use a cloud provider, e.g.   
    https://www.digitalocean.com/  

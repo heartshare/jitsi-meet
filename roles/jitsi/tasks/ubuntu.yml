@@ -1,5 +1,6 @@
 ---
 # tasks file for jitsi
+# ubuntu version
 
 - name: copy hosts file
   template:

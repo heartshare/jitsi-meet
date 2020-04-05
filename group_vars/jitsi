@@ -1,4 +1,4 @@
 ---
-ansible_setfqdn: example.domain.org
+ansible_setfqdn: example.sarnow.no
 ansible_sethostname: example
-ansible_email: olaf@domain.org
+ansible_email: olaf@sarnow.no

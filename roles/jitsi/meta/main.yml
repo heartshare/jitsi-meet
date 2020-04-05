@@ -3,7 +3,7 @@ dependencies: []
 
 galaxy_info:
   author: Olaf Sarnow
-  description: Install jitsi on ubuntu 18.04
+  description: Install jitsi meet server on Linux
   license: "license (BSD, MIT)"
   min_ansible_version: 2.4
   platforms:
@@ -11,3 +11,6 @@ galaxy_info:
       versions:
         - 18.04
         - 19.10
+    - name: CentOS
+      version:
+        - 7.6

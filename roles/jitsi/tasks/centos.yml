@@ -1,0 +1,224 @@
+---
+# tasks file for jitsi
+# centos version
+
+- name: copy hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  tags: hostname
+
+- hostname:
+    name: "{{ ansible_sethostname }}"
+  tags: hostname
+
+- name: install pkgs
+  yum: name=epel-release state=present update_cache=yes
+  tags: install
+
+- name: install pkgs
+  yum: name={{ item }} state=present update_cache=yes
+  with_items:
+    - git
+    - wget
+    - ca-certificates
+    - nginx
+    - unzip
+    - java-latest-openjdk
+    - maven
+    - prosody
+    - gcc-c++
+    - make
+  tags: install
+
+- name: start nginx
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  tags: nginx
+
+- name: create jitsi dir
+  file:
+    dest: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/jitsi
+    - /etc/jitsi/jicofo
+    - /etc/jitsi/meet
+    - /etc/jitsi/videobridge
+  tags: jitsi-dir
+
+- name: copy jitsi-meet  conf
+  template:
+    src: jitsi-meet.config.js.j2
+    dest: /etc/jitsi/meet/{{ ansible_setfqdn }}-config.js
+    owner: root
+    group: root
+    mode: 0644
+  tags: meet
+
+- name: jicofo sip conf
+  lineinfile:
+    path: /etc/jicofo/sip-communicator.properties
+    line: org.jitsi.jicofo.BRIDGE_MUC=JvbBrewery@internal.{{ ansible_setfqdn }}
+    create: yes
+  tags: jicofo
+
+- name: generate npm
+  shell: |
+    curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash -
+  tags: install
+
+- name: install nodejs
+  yum:
+    name: nodejs
+    state: present
+  tags: install
+
+- name: delete example.conf prodosy
+  file:
+    path: /etc/prosody/conf.d/example.com.cfg.lua
+    state: absent
+  tags: prosody
+
+- name: copy prodosy conf
+  template:
+    src: prosody.conf.j2
+    dest: /etc/prosody/conf.d/{{ ansible_setfqdn }}.cfg.lua
+  tags: prosody
+
+- name: generate certs prosody
+  shell: |
+    prosodyctl cert generate {{ ansible_setfqdn }}
+    update-ca-trust force-enable
+  tags: prosody
+
+- name: link cert
+  file:
+    src: /var/lib/prosody/{{ ansible_setfqdn }}.crt
+    dest: /etc/pki/ca-trust/source/anchors/{{ ansible_setfqdn }}.crt
+    state: link
+  tags: prosody
+
+- name: update ca
+  shell: |
+    update-ca-trust extract
+  tags: prosody
+
+- name: start prosody
+  shell: |
+    prosodyctl restart
+  tags: prosody
+
+- name: get videobridge
+  get_url:
+    url: https://download.jitsi.org/jitsi-videobridge/linux/{{ vb_pkg }}.zip
+    dest: /var/tmp
+  tags: vbridge
+
+- name: unzip videobridge
+  unarchive:
+    src: /var/tmp/{{ vb_pkg }}.zip
+    dest: /var/tmp
+    remote_src: yes
+  tags: vbridge
+
+- name: copy folder videobridge
+  shell: |
+    mv  /var/tmp/{{ vb_pkg }} /usr/local/videobridge
+  tags: vbridge
+
+- name: configure videobridge
+  shell: |
+    cat > /etc/jitsi/videobridge/sip-communicator.properties << EOF
+    org.ice4j.ice.harvest.DISABLE_AWS_HARVESTER=true
+    org.ice4j.ice.harvest.STUN_MAPPING_HARVESTER_ADDRESSES=meet-jit-si-turnrelay.jitsi.net:443
+    org.jitsi.videobridge.ENABLE_STATISTICS=true
+    org.jitsi.videobridge.STATISTICS_TRANSPORT=muc
+    org.jitsi.videobridge.xmpp.user.shard.HOSTNAME=localhost
+    org.jitsi.videobridge.xmpp.user.shard.DOMAIN=auth.{{ ansible_setfqdn }}
+    org.jitsi.videobridge.xmpp.user.shard.USERNAME=jvb
+    org.jitsi.videobridge.xmpp.user.shard.PASSWORD=1Y3GsLJn
+    org.jitsi.videobridge.xmpp.user.shard.MUC_JIDS=JvbBrewery@internal.auth.{{ ansible_setfqdn }}
+    org.jitsi.videobridge.xmpp.user.shard.MUC_NICKNAME=9684a5cc-99cf-43c5-8848-cc52d457892b
+    EOF
+  tags: vbridge
+
+- name: Install Jitsi Conference Focus (jicofo)
+  git:
+    repo: 'https://github.com/jitsi/jicofo.git'
+    dest: /usr/local/jicofo
+  tags: jicofo
+
+- name: build jicofo
+  shell: |
+    cd /usr/local/jicofo ; mvn package -DskipTests -Dassembly.skipAssembly=false &&
+    cd /usr/local/jicofo ; unzip target/jicofo-1.1-SNAPSHOT-archive.zip
+  tags: jicofo
+
+- name: start jicofo
+  shell: |
+    cd /usr/local/jicofo/jicofo-1.1-SNAPSHOT ; JAVA_SYS_PROPS="-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=jicofo" exec ./jicofo.sh --host=localhost --domain={{ ansible_setfqdn }}  --secret=vwe3i28Y --port=5347 --user_name=focus --user_domain=auth.{{ ansible_setfqdn }} &
+  tags: jicofo
+
+- name: checkout jitsi-meet
+  git:
+    repo: 'https://github.com/jitsi/jitsi-meet.git'
+    dest: /usr/share/jitsi-meet
+  tags: meet
+
+- name: build jitsi-meet
+  shell: |
+    cd /usr/share/jitsi-meet ; npm install && make
+  tags: meet
+
+
+
+- name: copy cert script
+  template:
+    src: install-letsencrypt-cert-centos.sh.j2
+    dest: /root/install-letsencrypt-cert-centos.sh
+    mode: 0755
+  tags: cert
+
+- name: create nginx dir
+  file:
+    path: /etc/nginx/conf.d
+    state: directory
+    mode: '0755'
+  tags: nginx
+
+
+- name: copy nginx conf
+  template:
+    src: DEFAULT.conf.j2
+    dest: /etc/nginx/conf.d/{{ ansible_setfqdn }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags: nginx
+
+- name: create cert
+  shell: |
+    /root/install-letsencrypt-cert-centos.sh
+  tags: nginx
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: start videobridge
+  shell: |
+    cd /usr/local/videobridge ; JAVA_SYS_PROPS="-Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION=/etc/jitsi -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=videobridge" exec ./jvb.sh --domain={{ ansible_setfqdn }} --port=5347 --secret=1Y3GsLJn &
+  tags: vbridge
+
+
+- name: enable http access
+  shell: |
+    setsebool -P httpd_can_network_connect on
+    chcon -Rt httpd_sys_content_t /usr/share/jitsi-meet

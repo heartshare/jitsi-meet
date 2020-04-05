@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e
+
+DOMAIN="{{ ansible_setfqdn }}"
+EMAIL={{ ansible_email }}
+
+cd /usr/local/sbin
+
+if [ ! -f certbot-auto ] ; then
+  wget https://dl.eff.org/certbot-auto
+  chmod a+x ./certbot-auto
+fi
+
+CRON_FILE="/etc/cron.weekly/letsencrypt-renew"
+echo "#!/bin/bash" > $CRON_FILE
+echo "/usr/local/sbin/certbot-auto renew >> /var/log/le-renew.log" >> $CRON_FILE
+
+CERT_KEY="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
+CERT_CRT="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+
+   ./certbot-auto certonly --noninteractive \
+    --webroot --webroot-path /usr/share/nginx/html \
+    -d $DOMAIN \
+    --agree-tos --email $EMAIL
+
+chmod a+x $CRON_FILE
