@@ -70,3 +70,5 @@ ansible-playbook site-jitsi.yml
 ## Any hints or feedback?
 
 Olaf Sarnow <olaf.sarnow@uib.no>
+
+![install you own jitsi server](https://www.sarnow.no/install.jpg)
