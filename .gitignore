@@ -3,4 +3,4 @@
 .travis.yml
 CODE_OF_CONDUCT.md
 LICENSE
-group_vars/jitsi
+/group_vars/jitsi
