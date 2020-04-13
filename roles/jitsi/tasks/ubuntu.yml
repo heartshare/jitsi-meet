@@ -32,7 +32,7 @@
     - nginx
     - debconf-utils
   tags: install
- 
+
 - name: set JAVA_HOME
   shell: |
     echo "JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")" | tee -a /etc/profile
