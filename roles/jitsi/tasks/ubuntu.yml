@@ -15,19 +15,16 @@
     name: "{{ ansible_sethostname }}"
   tags: hostname
 
-- apt_repository:
-    repo: ppa:openjdk-r/ppa
+- name: Update all packages to the latest version
+  shell: |
+    apt update
   tags: install
 
 - name: Update all packages to the latest version
-  apt:
-    upgrade: dist
+  shell: |
+    apt-get -qy -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" upgrade
   tags: install
 
-- name: Upgrade all packages to the latest version
-  apt:
-    name: "*"
-  tags: install
 
 - name: Install packages
   apt: name={{ item }}
@@ -35,6 +32,11 @@
     - openjdk-8-jre-headless
     - nginx
     - debconf-utils
+  tags: install
+ 
+- name: set JAVA_HOME
+  shell: |
+    echo "JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")" | tee -a /etc/profile
   tags: install
 
 - name: get repo key
@@ -45,25 +47,36 @@
 - name: set jitsi install options
   shell: |
     echo 'deb https://download.jitsi.org stable/' >> /etc/apt/sources.list.d/jitsi-stable.list
-    echo "jitsi-videobridge jitsi-videobridge/jvb-hostname string {{ ansible_setfqdn }}" | debconf-set-selections
-    echo "jitsi-meet jitsi-meet/jvb-hostname string {{ ansible_setfqdn }}" | debconf-set-selections
-    echo "jitsi-meet-prosody	jitsi-meet-prosody/jvb-hostname {{ ansible_setfqdn }}" | debconf-set-selections
     echo "jitsi-meet-prosody	jitsi-videobridge/jvb-hostname	string {{ ansible_setfqdn }}" | debconf-set-selections
+    echo "jitsi-meet-turnserver	jitsi-videobridge/jvb-hostname	string {{ ansible_setfqdn }}" | debconf-set-selections
     echo "jitsi-meet-web-config	jitsi-videobridge/jvb-hostname	string {{ ansible_setfqdn }}" | debconf-set-selections
+    echo "jitsi-videobridge2 jitsi-videobridge/jvb-hostname string {{ ansible_setfqdn }}" | debconf-set-selections
+    echo "jitsi-meet-turnserver	jitsi-meet-turnserver/jvb-hostname	string {{ ansible_setfqdn }}" | debconf-set-selections
+
+    echo "jitsi-meet-prosody	jitsi-meet-prosody/jvb-hostname string {{ ansible_setfqdn }}" | debconf-set-selections
     echo "jitsi-meet-web-config	jitsi-meet/jvb-hostname	string {{ ansible_setfqdn }}" | debconf-set-selections
     echo "jitsi-meet-web-config	jitsi-meet/cert-choice	select	Generate a new self-signed certificate (You will later get a chance to obtain a Let's encrypt certificate)" | debconf-set-selections
-  tags: jitsi
+  tags: jitsi-debconf
 
-- name: Run the equivalent of "apt-get update" as a separate step
-  apt:
-    update_cache: yes
+- name: Update all packages to the latest version
+  shell: |
+    apt update
   tags: install
+
 
 - name: Install jitsi
   apt:
     name: jitsi-meet
     state: present
   tags: jitsi
+
+- name: stop nginx
+  service:
+    name: nginx
+    state: stopped
+    enabled: true
+  tags: nginx
+
 
 - name: copy acme file
   when: ansible_distribution_version == "18.04"
@@ -86,13 +99,6 @@
   tags: cert
 
 
-- name: stop nginx
-  service:
-    name: nginx
-    state: stopped
-    enabled: true
-  tags: nginx
-
 - name: copy nginx conf
   template:
     src: DEFAULT.conf.j2
@@ -101,25 +107,6 @@
     group: root
     mode: 0644
   tags: nginx
-
-- name: stop jitsi for configuring nginx
-  service: name={{ item }} state=stopped
-  when: ansible_distribution_version == "18.04"
-  with_items:
-    -  jitsi-videobridge2
-    -  jicofo
-    -  prosody
-  tags: nginx
-
-- name: stop jitsi for configuring nginx
-  service: name={{ item }} state=stopped
-  when: ansible_distribution_version == "19.10"
-  with_items:
-    -  jitsi-videobridge2
-    -  jicofo
-    -  prosody
-  tags: nginx
-
 
 - name: configure cert
   shell: /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
@@ -132,37 +119,8 @@
     state: link
   tags: nginx
 
-- name: kill hanging java
-  shell: killall -9 java
-  ignore_errors: yes
-  tags: kill
-
-- name: delete link nginx
-  file:
-    dest: /etc/nginx/modules-enabled/60-jitsi-meet.conf
-    state: absent
-  tags: nginx
-
 - name: start nginx
   service:
     name: nginx
     state: restarted
   tags: nginx
-
-- name: start jitsi
-  service: name={{ item }} state=started
-  when: ansible_distribution_version == "18.04"
-  with_items:
-    -  jitsi-videobridge2
-    -  jicofo
-    -  prosody
-  tags: jitsi
-
-- name: start jisti
-  service: name={{ item }} state=started
-  when: ansible_distribution_version == "19.10"
-  with_items:
-    -  jitsi-videobridge2
-    -  jicofo
-    -  prosody
-  tags: jitsi
