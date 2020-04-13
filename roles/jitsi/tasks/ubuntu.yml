@@ -25,7 +25,6 @@
     apt-get -qy -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" upgrade
   tags: install
 
-
 - name: Install packages
   apt: name={{ item }}
   with_items:
