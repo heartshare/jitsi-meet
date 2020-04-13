@@ -4,11 +4,11 @@
 
 ## Prerequisites
 * A fresh Linux based server instance with an IPv4 address  
+* for good performance install it with 2 CPU and 8 GB RAM at least
 
 * supported and tested versions  
    Ubuntu 18.04 (LTS) x64  
    Ubuntu 19.10  
-   CentOS 7.6
 
   You can use a cloud provider, e.g.   
    https://www.digitalocean.com/  
